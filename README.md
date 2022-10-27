@@ -21,7 +21,7 @@ Use [HACS](https://github.com/custom-components/hacs) or [download](https://gith
 
 ```yaml
 heating:
-  module: heating
+  module: hive_trv_heating
   class: HiveHeating
   main_thermostat: climate.living_room_thermostat
   main_thermostat_zigbee_set_topic: "zigbee2mqtt/Living Room Thermostat/set"
