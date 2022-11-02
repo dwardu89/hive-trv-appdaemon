@@ -13,6 +13,9 @@ import datetime
 APP_NAME = "Hive TRV Boost Mode"
 APP_ICON = "🔥"
 
+HVAC_ACTION_OFF = "off"
+HVAC_ACTION_HEATING = "heating"
+
 class HiveHeating(hass.Hass):
 
     def initialize(self):
@@ -28,7 +31,7 @@ class HiveHeating(hass.Hass):
         self.log("Is anyone home? [{}]".format(self.anyone_home()))
         self.log("Registering all TRVs with a HeatRequired callback".format(entity))
         self.listen_state(self.heating_required,
-                          self.args["trv_list"], attribute="heat_required")
+                          self.args["trv_list"], attribute="hvac_action")
         self.log("Using [{}] to track TRV Boost mode".format(
             self.args["trv_boost_mode"]))
         self.trv_boost_mode_entity = self.args["trv_boost_mode"]
@@ -65,7 +68,7 @@ class HiveHeating(hass.Hass):
             current_temperature, target_temperature), level="DEBUG")
 
         # Check if the valve requires heat, if so enable boost mode for an hour
-        require_boost_mode = self.is_boost_mode_still_required(entity, new)
+        require_boost_mode = self.is_boost_mode_still_required(entity, new == HVAC_ACTION_HEATING)
         if self.is_boost_mode_enabled() and require_boost_mode:
             self.log("Enabling Boost Mode")
             # Check if there's another TRV with a higher entity boost mode
@@ -88,13 +91,13 @@ class HiveHeating(hass.Hass):
         if not radiator_heating_required:
             # If No heating is required for this trv, check if it is required for the other TRVs.
             for trv in self.trv_list:
-                heat_required = self.get_state(trv, attribute="heat_required")
-                if heat_required:
-                    self.log("TRV [{}] still has heat_required: {}".format(
-                        trv, heat_required))
+                hvac_action = self.get_state(trv, attribute="hvac_action")
+                if hvac_action == HVAC_ACTION_HEATING:
+                    self.log("TRV [{}] still has hvac_action: {}".format(
+                        trv, hvac_action))
                     return True
         else:
-            self.log("TRV [{}] sent a heat_required: {} status".format(
+            self.log("TRV [{}] sent a hvac_action: {} status".format(
                 entity, radiator_heating_required), level="DEBUG")
             return True
         self.log("No Heat is required any more", level="DEBUG")
@@ -115,7 +118,7 @@ class HiveHeating(hass.Hass):
 
         # Check if the valve requires heat, if so enable boost mode for an hour
         require_boost_mode = self.is_boost_mode_still_required(
-            entity=None, radiator_heating_required=False)
+            entity=None, radiator_heating_required=HVAC_ACTION_OFF)
         main_thermostat_system_mode = self.get_state(
             self.main_thermostat, attribute="system_mode")
         self.log("Main Thermostat System Mode [{}]".format(
