@@ -174,7 +174,7 @@ class HiveHeating(hass.Hass):
         self.call_mqtt_service(
             topic=self.main_thermostat_zigbee_set_topic, payload=mqtt_message)
 
-    def stop_emergency_boost(self, target_temperature):
+    def stop_emergency_boost(self):
         # target_temperature_ranged = self.ensure_target_temperature_in_range(
         #     target_temperature)
         mqtt_message = self.generate_mqtt_message(system_mode="emergency_heating",
