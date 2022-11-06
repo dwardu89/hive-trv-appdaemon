@@ -139,13 +139,14 @@ class HiveHeating(hass.Hass):
                     "Still on emergency_heating. Disabling Boost Mode")
                 self.stop_emergency_boost()
 
-    def generate_mqtt_message(self, system_mode, temperature_setpoint_hold_duration, temperature_setpoint_hold, occupied_heating_setpoint):
+    def generate_mqtt_message(self, system_mode, temperature_setpoint_hold_duration, temperature_setpoint_hold=None, occupied_heating_setpoint=None):
         mqtt_message = dict()
         mqtt_message["system_mode"] = system_mode
         mqtt_message["temperature_setpoint_hold_duration"] = temperature_setpoint_hold_duration
         if temperature_setpoint_hold is not None:
             mqtt_message["temperature_setpoint_hold"] = temperature_setpoint_hold
-        mqtt_message["occupied_heating_setpoint"] = occupied_heating_setpoint
+        if occupied_heating_setpoint is not None:
+            mqtt_message["occupied_heating_setpoint"] = occupied_heating_setpoint
         return json.dumps(mqtt_message)
 
     def call_mqtt_service(self, topic, payload):
@@ -178,7 +179,6 @@ class HiveHeating(hass.Hass):
         # target_temperature_ranged = self.ensure_target_temperature_in_range(
         #     target_temperature)
         mqtt_message = self.generate_mqtt_message(system_mode="emergency_heating",
-                                                  temperature_setpoint_hold="1",
                                                   temperature_setpoint_hold_duration=0)
 
         self.call_mqtt_service(
