@@ -85,7 +85,7 @@ class HiveHeating(hass.Hass):
             self.set_state(self.trv_boost_mode_temperature_entity, state=5)
             self.log(
                 "Disabling Boost Mode, Returning Main Thermostat to previous state")
-            self.stop_emergency_boost(5)
+            self.stop_emergency_boost()
 
     def is_boost_mode_still_required(self, entity, radiator_heating_required):
         if not radiator_heating_required:
@@ -123,7 +123,8 @@ class HiveHeating(hass.Hass):
             self.main_thermostat, attribute="system_mode")
         self.log("Main Thermostat System Mode [{}]".format(
             main_thermostat_system_mode), level="DEBUG")
-        if self.is_boost_mode_enabled() and require_boost_mode and not require_boost_mode == "emergency_heating":
+            
+        if self.is_boost_mode_enabled() and require_boost_mode and not main_thermostat_system_mode == "emergency_heating":
             self.log("Enabling Boost Mode")
             # Get the highest temperature and start emergency boost
             self.start_emergency_boost(self.get_max_radiator_temperature())
@@ -132,11 +133,11 @@ class HiveHeating(hass.Hass):
             # and check if those valves have boost mode enabled for them.
             # Eventually check if the valve is in the schedule
             # Only turn off if emergency heating is turned on. Otherwise there might be an external factor or heating.
-            if main_thermostat_system_mode == "emergency_heating" and not self.is_boost_mode_enabled():
+            if main_thermostat_system_mode == "emergency_heating" and (not self.is_boost_mode_enabled() or not require_boost_mode):
                 self.set_state(self.trv_boost_mode_temperature_entity, state=5)
                 self.log(
                     "Still on emergency_heating. Disabling Boost Mode")
-                self.stop_emergency_boost(5)
+                self.stop_emergency_boost()
 
     def generate_mqtt_message(self, system_mode, temperature_setpoint_hold_duration, temperature_setpoint_hold, occupied_heating_setpoint):
         mqtt_message = dict()
@@ -174,12 +175,11 @@ class HiveHeating(hass.Hass):
             topic=self.main_thermostat_zigbee_set_topic, payload=mqtt_message)
 
     def stop_emergency_boost(self, target_temperature):
-        target_temperature_ranged = self.ensure_target_temperature_in_range(
-            target_temperature)
+        # target_temperature_ranged = self.ensure_target_temperature_in_range(
+        #     target_temperature)
         mqtt_message = self.generate_mqtt_message(system_mode="emergency_heating",
                                                   temperature_setpoint_hold="1",
-                                                  temperature_setpoint_hold_duration=0,
-                                                  occupied_heating_setpoint=str(target_temperature_ranged))
+                                                  temperature_setpoint_hold_duration=0)
 
         self.call_mqtt_service(
             topic=self.main_thermostat_zigbee_set_topic, payload=mqtt_message)
