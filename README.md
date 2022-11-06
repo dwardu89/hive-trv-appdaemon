@@ -46,7 +46,7 @@ key | optional | type | default | description
 `main_thermostat_zigbee_set_topic` | False | string | | The MQTT set topic referring to your main Hive thermostat.
 `trv_list` | False | list(string) | | The list of TRV entities which you would like to have the app monitor for boost mode.
 `log` | True | string | `heat_log` | The log in appdaemon to write the logs to. It's suggested you create a log specific to this to separate logging.
-`frost_protection` | False | boolean | True | Enables frost protection, kicking off boost mode irreespective if boost mode is enabled.
+`frost_protection` | False | boolean | True | Enables frost protection, kicking off boost mode irreespective if boost mode is enabled. (TO BE IMPLEMENTED)
 `trv_boost_mode` | False | string | | The input_boolean entity to control this app, enabling or disabling boost mode.
 `trv_boost_mode_temperature` | False | string | | The input_number entity to determine what is the maximum boost mode value the `main_thermostat` should be set at.
 
@@ -59,3 +59,9 @@ logs:
   heat_log:
     name: HeatLog
 ```
+
+## Logic of Application
+
+This app will use the `hvac_action` set in each Hive radiator valve, it probably can be used with other TRV's to interact with the Hive emergency boost feature. Once the radiator valve requires heat, it will set it's `hvac_action` attribute to `heating`. `heating` Triggers this appdaemon to push an emergency boost message to the main Hive thermostat. If the app is restarted or unexpectedly crashes, it will check if heating is required on a minute by minute basis just to ensure that no excess heating is done to save on costs.
+
+You can set automations which will disable this app by setting the `trv_boost_mode` variable to False by changing the `input_boolean` provided.
