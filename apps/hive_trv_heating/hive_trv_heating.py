@@ -118,7 +118,7 @@ class HiveHeating(hass.Hass):
 
         # Check if the valve requires heat, if so enable boost mode for an hour
         require_boost_mode = self.is_boost_mode_still_required(
-            entity=None, radiator_heating_required=HVAC_ACTION_OFF)
+            entity=None, radiator_heating_required=False)
         main_thermostat_system_mode = self.get_state(
             self.main_thermostat, attribute="system_mode")
         self.log("Main Thermostat System Mode [{}]".format(
