@@ -72,17 +72,11 @@ class HiveHeating(hass.Hass):
         if self.is_boost_mode_enabled() and require_boost_mode:
             self.log("Enabling Boost Mode")
             # Check if there's another TRV with a higher entity boost mode
-            if target_temperature > trv_boost_mode_temperature:
-                self.set_state(self.trv_boost_mode_temperature_entity,
-                               state=target_temperature)
-                trv_boost_mode_temperature = target_temperature
-                # Also set the target temperature
-                self.start_emergency_boost(trv_boost_mode_temperature)
+            self.start_emergency_boost(trv_boost_mode_temperature)
         else:
             # disable boost mode, but check if the temperatures around the other valves are required
             # and check if those valves have boost mode enabled for them.
             # Eventually check if the valve is in the schedule
-            self.set_state(self.trv_boost_mode_temperature_entity, state=5)
             self.log(
                 "Disabling Boost Mode, Returning Main Thermostat to previous state")
             self.stop_emergency_boost()
@@ -103,15 +97,6 @@ class HiveHeating(hass.Hass):
         self.log("No Heat is required any more", level="DEBUG")
         return False
 
-    def get_max_radiator_temperature(self):
-        max_temp = 5.0
-        for trv in self.trv_list:
-            trv_temp_required = float(
-                self.get_state(trv, attribute="temperature"))
-            if trv_temp_required > max_temp:
-                max_temp = trv_temp_required
-        return max_temp
-
     def temperature_check(self, kwargs):
         # Check if temperatures need to be run, this is used to check if appdaemon is restarted haphazardly
         self.log("Checking Temperature heat is required", level="DEBUG")
@@ -126,15 +111,18 @@ class HiveHeating(hass.Hass):
             
         if self.is_boost_mode_enabled() and require_boost_mode and not main_thermostat_system_mode == "emergency_heating":
             self.log("Enabling Boost Mode")
+            
+            trv_boost_mode_temperature = float(
+                self.get_state(self.trv_boost_mode_temperature_entity))
             # Get the highest temperature and start emergency boost
-            self.start_emergency_boost(self.get_max_radiator_temperature())
+            self.start_emergency_boost(trv_boost_mode_temperature)
         else:
             # disable boost mode, but check if the temperatures around the other valves are required
             # and check if those valves have boost mode enabled for them.
             # Eventually check if the valve is in the schedule
             # Only turn off if emergency heating is turned on. Otherwise there might be an external factor or heating.
             if main_thermostat_system_mode == "emergency_heating" and (not self.is_boost_mode_enabled() or not require_boost_mode):
-                self.set_state(self.trv_boost_mode_temperature_entity, state=5)
+                # self.set_state(self.trv_boost_mode_temperature_entity, state=5)
                 self.log(
                     "Still on emergency_heating. Disabling Boost Mode")
                 self.stop_emergency_boost()
@@ -176,8 +164,6 @@ class HiveHeating(hass.Hass):
             topic=self.main_thermostat_zigbee_set_topic, payload=mqtt_message)
 
     def stop_emergency_boost(self):
-        # target_temperature_ranged = self.ensure_target_temperature_in_range(
-        #     target_temperature)
         mqtt_message = self.generate_mqtt_message(system_mode="heat",
                                                   temperature_setpoint_hold_duration=0,
                                                   temperature_setpoint_hold=1)
