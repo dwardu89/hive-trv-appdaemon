@@ -44,7 +44,7 @@ class HiveHeating(hass.Hass):
             self.get_state(self.trv_boost_mode_temperature_entity)), level="DEBUG")
         self.main_thermostat_zigbee_set_topic = self.args["main_thermostat_zigbee_set_topic"]
 
-        self.SETPOINT_HOLD_DURATION = 30
+        self.SETPOINT_HOLD_DURATION = self.args["boost_mode_hold_duration_minutes"]
         # Check if temperatures need to be run, this is used to check if appdaemon is restarted haphazardly
         self.run_minutely(self.temperature_check, datetime.time(0, 0, 0))
 
