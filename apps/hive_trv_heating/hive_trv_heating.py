@@ -155,7 +155,7 @@ class HiveHeating(hass.Hass):
         mqtt_message = self.generate_mqtt_message(system_mode="emergency_heating",
                                                   temperature_setpoint_hold="1",
                                                   temperature_setpoint_hold_duration=self.SETPOINT_HOLD_DURATION,
-                                                  occupied_heating_setpoint=str(target_temperature_ranged))
+                                                  occupied_heating_setpoint=target_temperature_ranged)
 
         self.log("Emergency Boost Mqtt message [{}]".format(
             mqtt_message), level="DEBUG")
